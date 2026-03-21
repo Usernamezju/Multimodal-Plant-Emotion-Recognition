@@ -48,42 +48,42 @@ class PlantMultimodalDataset(Dataset):
         
         """以下代码是针对之前数据缺失时的填充处理策略，即将弃用"""
         # 处理电压 (Light 样本)
-        # if '电压(V)' in df.columns:
-        #     v_data = df['电压(V)'].values
-        #     for i in range(0, len(v_data) - self.window_size, self.window_size // 2):
-        #         chunk = v_data[i : i + self.window_size]
-        #         self.samples.append({
-        #             'volt': torch.FloatTensor(chunk).unsqueeze(0),
-        #             'imp': torch.FloatTensor([self._normalize_imp(self.imp_mean)]), # 用全局均值填充
-        #             'label': label
-        #         })
+        if '电压(V)' in df.columns:
+            v_data = df['电压(V)'].values
+            for i in range(0, len(v_data) - self.window_size, self.window_size // 2):
+                chunk = v_data[i : i + self.window_size]
+                self.samples.append({
+                    'volt': torch.FloatTensor(chunk).unsqueeze(0),
+                    'imp': torch.FloatTensor([self._normalize_imp(self.imp_mean)]), # 用全局均值填充
+                    'label': label
+                })
 
-        # # 处理阻抗 (Normal/Touch 样本)
-        # if '幅值(高频80K)' in df.columns:
-        #     for val in df['幅值(高频80K)'].values:
-        #         self.samples.append({
-        #             'volt': torch.zeros(1, self.window_size),
-        #             'imp': torch.FloatTensor([self._normalize_imp(val)]),
-        #             'label': label
-        #         })
+        # 处理阻抗 (Normal/Touch 样本)
+        if '幅值(高频80K)' in df.columns:
+            for val in df['幅值(高频80K)'].values:
+                self.samples.append({
+                    'volt': torch.zeros(1, self.window_size),
+                    'imp': torch.FloatTensor([self._normalize_imp(val)]),
+                    'label': label
+                })
 
         # 假设新 CSV 中同时拥有两列
-        v_data = df['电压(V)'].values
-        imp_data = df['幅值(高频80K)'].values
+        # v_data = df['电压(V)'].values
+        # imp_data = df['幅值(高频80K)'].values
 
-        # 以 250 点（1秒）的电压为一个窗口
-        for i in range(0, len(v_data) - 250, 125):
-            volt_chunk = v_data[i : i + 250]
+        # # 以 250 点（1秒）的电压为一个窗口
+        # for i in range(0, len(v_data) - 250, 125):
+        #     volt_chunk = v_data[i : i + 250]
             
-            # 提取这 1 秒内的阻抗均值作为这一段电压的伴随生理特征
-            imp_chunk_mean = np.mean(imp_data[i : i + 250])
+        #     # 提取这 1 秒内的阻抗均值作为这一段电压的伴随生理特征
+        #     imp_chunk_mean = np.mean(imp_data[i : i + 250])
             
-            # 打包数据
-            self.samples.append({
-                'volt': torch.FloatTensor(volt_chunk).unsqueeze(0),
-                'imp': torch.FloatTensor([self._normalize_imp(imp_chunk_mean)]),
-                'label': label
-            })
+        #     # 打包数据
+        #     self.samples.append({
+        #         'volt': torch.FloatTensor(volt_chunk).unsqueeze(0),
+        #         'imp': torch.FloatTensor([self._normalize_imp(imp_chunk_mean)]),
+        #         'label': label
+        #     })
 
     def __len__(self):
         return len(self.samples)

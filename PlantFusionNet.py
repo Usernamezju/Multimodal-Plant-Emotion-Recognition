@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from PlantTimeDomainEncoder import PlantTimeDomainEncoder
 from PlantBiphasicActivation import PlantBiphasicActivation
 
@@ -29,21 +30,14 @@ class PlantFusionNet(nn.Module):
         self.pba = PlantBiphasicActivation(num_classes=num_classes)
 
     def forward(self, volt, imp):
-        # volt: [B, 1, 250], imp: [B, 1]
-        
-        # 提取时序特征: [B, 128]
         v_feat = self.volt_branch(volt) 
-        
-        # 提取阻抗特征: [B, 64]
         i_feat = self.imp_branch(imp)
         
-        # 模态融合: [B, 192]
         combined = torch.cat((v_feat, i_feat), dim=1)
         
-        # 映射到 Logits 空间
+        # 【修改点】：加入 Dropout 逼迫多模态均衡发展，防止模型只依赖阻抗偷懒
+        combined = F.dropout(combined, p=0.3, training=self.training)
+        
         logits = self.fusion_projection(combined)
-        
-        # PBA 生理判别
         phi_norm, f_fast, f_slow = self.pba(logits)
-        
         return phi_norm, f_fast, f_slow

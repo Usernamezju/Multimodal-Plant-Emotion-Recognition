@@ -86,13 +86,13 @@ def batch_process_dataset(input_root, output_root):
 
 # === 测试模块 ===
 if __name__ == "__main__":
-    df = pd.read_csv('/home/yuki_noa/plant_condition_model/dataset/light/26-03-07 15_30_24_915.csv') 
-    raw_voltage = df['电压(V)'].values if '电压(V)' in df.columns else df['幅值(高频80K)'].values
-    t = df['时间(s)'].values
+    # df = pd.read_csv('/home/yuki_noa/plant_condition_model/dataset/light/26-03-07 15_30_24_915.csv') 
+    # raw_voltage = df['电压(V)'].values if '电压(V)' in df.columns else df['幅值(高频80K)'].values
+    # t = df['时间(s)'].values
     
-    # 实例化并处理
-    signal_processor = PlantSignalFilter(fs=250.0)
-    filtered_voltage = signal_processor.process(raw_voltage)
+    # # 实例化并处理
+    # signal_processor = PlantSignalFilter(fs=250.0)
+    # filtered_voltage = signal_processor.process(raw_voltage)
 
     # 可视化对比(可选)
     # plt.figure(figsize=(10, 6))
@@ -106,8 +106,8 @@ if __name__ == "__main__":
     # plt.show()
 
     # 配置路径
-    INPUT_DIR = 'dataset'
-    OUTPUT_DIR = 'dataset_filtered'
+    INPUT_DIR = 'dataset_synthetic'
+    OUTPUT_DIR = 'dataset_synthetic_filtered'
     
     batch_process_dataset(INPUT_DIR, OUTPUT_DIR)
-    print("\n✅ 滤波任务已完成！数据已存入 dataset_filtered 文件夹。")
+    print(f"\n✅ 滤波任务已完成！数据已存入 {OUTPUT_DIR} 文件夹。")

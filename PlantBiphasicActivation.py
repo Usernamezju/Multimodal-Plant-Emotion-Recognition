@@ -20,12 +20,12 @@ class PlantBiphasicActivation(nn.Module):
         self.alpha = nn.Parameter(torch.full((num_classes,), 0.5))
 
     def forward(self, z):
-        # 专利公式实现：F = max(0, k*(z - theta)) 
-        # 这里使用 ReLU 的变体来模拟植物电位的门限开启效应
-        f_fast = torch.relu(self.k_fast * (z - self.theta_fast))
-        f_slow = torch.relu(self.k_slow * (z - self.theta_slow))
+        # 【修改点】：换用 softplus 解决“梯度坏死”
+        # 生理学意义：模拟植物离子通道渐进式的开启特性，而不是生硬的 0/1 切断
+        f_fast = F.softplus(self.k_fast * (z - self.theta_fast))
+        f_slow = F.softplus(self.k_slow * (z - self.theta_slow))
         
-        # 确保 alpha 在 [0, 1] 之间（生理意义：百分比）
+        # 确保 alpha 在 [0, 1] 之间
         alpha_bounded = torch.sigmoid(self.alpha) 
         
         # 最终组合输出
