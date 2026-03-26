@@ -1,59 +1,63 @@
+import torch
 import torch.nn as nn
 
 class PlantTimeDomainEncoder(nn.Module):
-    def __init__(self, input_channels=1, hidden_size=64, num_classes=5):
-        """
-        专门处理植物电位信号的时序分支网络
-        :param input_channels: 输入维度，通常为1（电压）
-        :param hidden_size: GRU隐藏层维度
-        :param num_classes: 最终分类数量（对应PBA的输入）
-        """
+    def __init__(self, in_channels=1, hidden_dim=64):
         super(PlantTimeDomainEncoder, self).__init__()
         
-        # 1. 1D CNN 分支：捕捉局部波形特征（如触摸尖峰）
-        self.conv_block = nn.Sequential(
-            # 第一层卷积，卷积核大小为7，增加感受野
-            nn.Conv1d(input_channels, 32, kernel_size=7, stride=1, padding=3),
-            nn.BatchNorm1d(32),
-            nn.ReLU(),
-            nn.MaxPool1d(kernel_size=2), # 降采样
-            
-            # 第二层卷积，提取深层抽象特征
-            nn.Conv1d(32, 64, kernel_size=3, stride=1, padding=1),
-            nn.BatchNorm1d(64),
-            nn.ReLU(),
-            nn.AdaptiveAvgPool1d(32) # 统一输出长度，方便后续接时序模型
-        )
+        # ---------------------------------------------------------
+        # Block 1: 宏观特征捕获器 (大卷积核 + 实例归一化)
+        # ---------------------------------------------------------
+        # kernel_size=31 相当于在 250Hz 下跨越了 124 毫秒的感受野，强迫网络忽略高频毛刺
+        self.conv1 = nn.Conv1d(in_channels, 16, kernel_size=31, stride=2, padding=15)
+        # 核心改动：加入 InstanceNorm1d。它会强制将每个样本片段的均值拉回 0。
+        # 物理意义：无论植物当时的基线电压是 1.2V 还是 0.3V，网络只看“波动形状”，消除绝对漂移的干扰！
+        self.in1 = nn.InstanceNorm1d(16)
+        self.relu1 = nn.ReLU()
+        self.pool1 = nn.MaxPool1d(kernel_size=2)
         
-        # 2. GRU 分支：记忆长期生理状态（如光照漂移）
-        # batch_first=True 意味着输入形状为 (batch, seq_len, features)
-        self.gru = nn.GRU(input_size=64, hidden_size=hidden_size, 
+        # ---------------------------------------------------------
+        # Block 2: 中等特征提取
+        # ---------------------------------------------------------
+        self.conv2 = nn.Conv1d(16, 32, kernel_size=11, stride=1, padding=5)
+        self.in2 = nn.InstanceNorm1d(32)
+        self.relu2 = nn.ReLU()
+        self.pool2 = nn.MaxPool1d(kernel_size=2)
+        
+        # 核心改动：加入 Dropout 防止网络过度依赖 CNN 提取到的强电压噪声
+        self.dropout = nn.Dropout(p=0.3)
+        
+        # ---------------------------------------------------------
+        # Block 3: 时序长程依赖捕获 (Bi-GRU)
+        # ---------------------------------------------------------
+        self.gru = nn.GRU(input_size=32, hidden_size=hidden_dim, 
                           num_layers=2, batch_first=True, bidirectional=True)
-        
-        # 3. 特征投影层：将GRU的隐藏状态映射到PBA的输入空间
-        # 因为是双向GRU，所以维度要乘以2
-        self.fc = nn.Linear(hidden_size * 2, num_classes)
-
+                          
     def forward(self, x):
-        """
-        :param x: 原始电压序列，形状 (batch_size, 1, seq_len)
-        """
-        # --- CNN 局部特征提取 ---
-        # 输入 (batch, 1, seq_len) -> 输出 (batch, 64, 32)
-        x = self.conv_block(x)
+        # x shape: [Batch, Channel=1, SeqLen=250]
         
-        # --- 维度调整，适配 GRU ---
-        # GRU需要 (batch, seq_len, features)，所以要置换一下维度
-        x = x.permute(0, 2, 1) 
+        # CNN 阶段
+        x = self.conv1(x)
+        x = self.in1(x)
+        x = self.relu1(x)
+        x = self.pool1(x)
         
-        # --- GRU 序列建模 ---
-        # out 形状: (batch, seq_len, hidden_size*2)
-        out, _ = self.gru(x)
+        x = self.conv2(x)
+        x = self.in2(x)
+        x = self.relu2(x)
+        x = self.pool2(x)
         
-        # 我们取序列的最后一个时间步的特征作为全局表示
-        last_time_step = out[:, -1, :]
+        x = self.dropout(x)
         
-        # --- 投影到 logit 空间 ---
-        logits = self.fc(last_time_step)
+        # 维度转换以适配 GRU: [Batch, Channel, SeqLen] -> [Batch, SeqLen, Channel]
+        x = x.permute(0, 2, 1)
         
-        return logits
+        # GRU 阶段
+        out, h_n = self.gru(x)
+        
+        # 提取双向 GRU 的最后隐层状态
+        # h_n shape: [num_layers * num_directions, Batch, hidden_dim]
+        # 拼接正向和反向的最终输出，得到 128 维特征
+        final_feat = torch.cat((h_n[-2, :, :], h_n[-1, :, :]), dim=1) 
+        
+        return final_feat

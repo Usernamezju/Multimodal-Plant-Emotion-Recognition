@@ -73,11 +73,11 @@ def batch_process_dataset(input_root, output_root):
             try:
                 # 读取数据 (跳过可能存在的阻抗文件，只处理电压数据)
                 df = pd.read_csv(file_path)
-                if '电压(V)' in df.columns:
-                    raw_v = df['电压(V)'].values
+                if '电压' in df.columns:
+                    raw_v = df['电压'].values
                     # 执行快速滤波
                     filtered_v = processor.process(raw_v)
-                    df['电压(V)'] = filtered_v
+                    df['电压'] = filtered_v
                 
                 # 写回结果
                 df.to_csv(os.path.join(out_cat_path, file_name), index=False)
@@ -106,8 +106,8 @@ if __name__ == "__main__":
     # plt.show()
 
     # 配置路径
-    INPUT_DIR = 'dataset_synthetic'
-    OUTPUT_DIR = 'dataset_synthetic_filtered'
+    INPUT_DIR = 'dataset_real_condition'
+    OUTPUT_DIR = INPUT_DIR + '_filtered'
     
     batch_process_dataset(INPUT_DIR, OUTPUT_DIR)
     print(f"\n✅ 滤波任务已完成！数据已存入 {OUTPUT_DIR} 文件夹。")
