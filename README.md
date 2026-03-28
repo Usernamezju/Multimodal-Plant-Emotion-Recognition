@@ -55,7 +55,7 @@ python main_train.py
 **预测接口**
 
 - 方法：`POST`
-- 地址：`https://3a10cc38.cpolar.io/predict`
+- 地址：`http://47.116.214.34:8000/predict`
 
 **Request：**
 ```json
@@ -86,11 +86,10 @@ python main_train.py
 **健康检查接口**
 
 - 方法：`GET`
-- 地址：`https://3a10cc38.cpolar.io/health`
+- 地址：`http://47.116.214.34:8000/health`
 - Response：`{"status": "ok"}`
 
 **API 在线文档**
 
-- 地址：`https://3a10cc38.cpolar.io/docs`
+- 地址：`http://47.116.214.34:8000/docs`
 
-> ⚠️ 当前为临时地址，正式部署后更新为固定域名
