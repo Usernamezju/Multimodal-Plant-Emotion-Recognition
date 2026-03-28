@@ -7,10 +7,11 @@ from PlantFusionNet import PlantFusionNet
 LABEL_NAMES = ["normal", "touch", "light", "stress"]
 
 CHECKPOINTS = [
-    "plant_fusion_train_by_true_data.pth",
-    "plant_fusion_train_by_synth_data.pth",
-    "plant_fusion_model.pth",
+    "model/plant_fusion_best_v1.pth",
+    "model/plant_fusion_last_v1.pth",
 ]
+
+
 
 
 def eval_one(model, val_loader, device, num_classes):
@@ -44,7 +45,8 @@ def eval_one(model, val_loader, device, num_classes):
     return overall, per_class, class_correct, class_total
 
 
-def run_eval(dataset_dir="dataset_filtered", batch_size=32, val_ratio=0.2):
+def run_eval(dataset_dir="dataset_real_condition_filtered", batch_size=32, val_ratio=0.2):
+    #更改数据集
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"使用设备: {device}\n")
 
