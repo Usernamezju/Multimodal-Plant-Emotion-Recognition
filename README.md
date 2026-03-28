@@ -55,19 +55,17 @@ python main_train.py
 **预测接口**
 
 - 方法：`POST`
-- 路径：`/predict`
-- 端口：`8000`
-- 域名/IP：待确认后提供
+- 地址：`https://3a10cc38.cpolar.io/predict`
 
 **Request：**
 ```json
 {
   "voltage": [0.1, 0.2, ...],
-  "impedance": 1500.0
+  "impedance": 7067.39
 }
 ```
 > `voltage`：250个浮点数（250Hz，采样1秒）  
-> `impedance`：1个浮点数（阻抗值）
+> `impedance`：1个浮点数（原始阻抗值，单位与传感器一致）
 
 **Response：**
 ```json
@@ -88,5 +86,11 @@ python main_train.py
 **健康检查接口**
 
 - 方法：`GET`
-- 路径：`/health`
+- 地址：`https://3a10cc38.cpolar.io/health`
 - Response：`{"status": "ok"}`
+
+**API 在线文档**
+
+- 地址：`https://3a10cc38.cpolar.io/docs`
+
+> ⚠️ 当前为临时地址，正式部署后更新为固定域名
