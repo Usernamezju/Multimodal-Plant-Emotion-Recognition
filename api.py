@@ -8,7 +8,7 @@ app = FastAPI()
 # 启动时加载模型（只加载一次）
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model = PlantFusionNet(num_classes=4).to(device)
-model.load_state_dict(torch.load("plant_fusion_train_by_true_data.pth", map_location=device, weights_only=True))
+model.load_state_dict(torch.load("plant_fusion_best_real_last.pth", map_location=device, weights_only=True))
 model.eval()
 
 LABEL_NAMES = ["normal", "touch", "light", "stress"]
