@@ -48,3 +48,45 @@ python main_train.py
 
 * **输入对齐**：电压信号采样率为 250Hz，阻抗为单点采样。Dataset 模块通过均值填充和滑动窗口实现两者的特征对齐。
 * **生理指标解读**：训练过程中输出的 $\alpha$ 值代表该状态是由“快速电信号（如动作电位）”还是“缓慢代谢（如变异电位）”引起的，数值越接近 1 代表响应越敏捷。
+
+
+## 🚀 API 对接
+
+**预测接口**
+
+- 方法：`POST`
+- 路径：`/predict`
+- 端口：`8000`
+- 域名/IP：待确认后提供
+
+**Request：**
+```json
+{
+  "voltage": [0.1, 0.2, ...],
+  "impedance": 1500.0
+}
+```
+> `voltage`：250个浮点数（250Hz，采样1秒）  
+> `impedance`：1个浮点数（阻抗值）
+
+**Response：**
+```json
+{
+  "label": "touch",
+  "label_id": 1,
+  "confidence": 0.9231,
+  "probabilities": {
+    "normal": 0.0312,
+    "touch": 0.9231,
+    "light": 0.0301,
+    "stress": 0.0156
+  }
+}
+```
+> `label` 四种取值：`normal`（正常）/ `touch`（触摸）/ `light`（光照）/ `stress`（胁迫）
+
+**健康检查接口**
+
+- 方法：`GET`
+- 路径：`/health`
+- Response：`{"status": "ok"}`

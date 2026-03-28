@@ -86,24 +86,6 @@ def batch_process_dataset(input_root, output_root):
 
 # === 测试模块 ===
 if __name__ == "__main__":
-    # df = pd.read_csv('/home/yuki_noa/plant_condition_model/dataset/light/26-03-07 15_30_24_915.csv') 
-    # raw_voltage = df['电压(V)'].values if '电压(V)' in df.columns else df['幅值(高频80K)'].values
-    # t = df['时间(s)'].values
-    
-    # # 实例化并处理
-    # signal_processor = PlantSignalFilter(fs=250.0)
-    # filtered_voltage = signal_processor.process(raw_voltage)
-
-    # 可视化对比(可选)
-    # plt.figure(figsize=(10, 6))
-    # plt.plot(t, raw_voltage, label='Raw Signal (with noise)', alpha=0.6)
-    # plt.plot(t, filtered_voltage, label='Filtered Signal', linewidth=2)
-    # plt.title('Plant Electrical Signal Preprocessing')
-    # plt.xlabel('Time (s)')
-    # plt.ylabel('Voltage (V) / 幅值')
-    # plt.legend()
-    # plt.grid(True)
-    # plt.show()
 
     # 配置路径
     INPUT_DIR = 'dataset_real_condition'

@@ -22,6 +22,11 @@ def run_training():
     # 2. 初始化模型
     num_classes = len(dataset.label_map)
     model = PlantFusionNet(num_classes=num_classes).to(device)
+
+    # 加载预训练参数（从真实数据训练的检查点继续）
+    checkpoint_path = "plant_fusion_train_by_true_data.pth"
+    model.load_state_dict(torch.load(checkpoint_path, map_location=device, weights_only=True))
+    print(f"✅ 已加载预训练参数: {checkpoint_path}")
     
     # 3. 损失函数与优化器
     criterion = nn.NLLLoss()
